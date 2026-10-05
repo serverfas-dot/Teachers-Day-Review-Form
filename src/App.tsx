@@ -18,6 +18,7 @@ const events = [
 const choices: Rating[] = ['Satisfactory', 'Good', 'Excellent'];
 const formTitle = 'Reflect and share your thoughts on Teachers day events - 2026';
 const submittedKey = 'faafu-teachers-day-review-submitted';
+const logoPath = `${import.meta.env.BASE_URL}png.png`;
 
 function App() {
   const isAdmin = window.location.pathname.startsWith('/admin');
@@ -28,10 +29,10 @@ function BrandHeader({ admin = false }: { admin?: boolean }) {
   return (
     <header className="topbar">
       <div className="brand">
-        <img src="/png.png" alt="Faafu Atoll School" />
+        <img src={logoPath} alt="Faafu Atoll School" />
         <div><strong>Faafu Atoll School</strong><span>{admin ? 'Review insights' : 'Teachers Day 2026'}</span></div>
       </div>
-      {!admin && <a className="admin-link" href="/admin"><LockKeyhole size={15} /> Admin sign in</a>}
+      {!admin && <a className="admin-link" href={`${import.meta.env.BASE_URL}admin`}><LockKeyhole size={15} /> Admin sign in</a>}
     </header>
   );
 }
@@ -78,13 +79,13 @@ function AdminApp() {
   const [session, setSession] = useState<boolean | null>(null);
   const [email, setEmail] = useState('admin.login@faafuschool.edu'); const [password, setPassword] = useState(''); const [authError, setAuthError] = useState(''); const [busy, setBusy] = useState(false);
   useEffect(() => { supabase.auth.getSession().then(({ data }) => setSession(Boolean(data.session))); const { data: listener } = supabase.auth.onAuthStateChange((_event, current) => setSession(Boolean(current))); return () => listener.subscription.unsubscribe(); }, []);
-  if (session === null) return <div className="loading-screen"><img src="/png.png" alt="" /><span>Loading dashboard...</span></div>;
+  if (session === null) return <div className="loading-screen"><img src={logoPath} alt="" /><span>Loading dashboard...</span></div>;
   if (!session) return <AdminLogin email={email} setEmail={setEmail} password={password} setPassword={setPassword} error={authError} busy={busy} onSubmit={async (event) => { event.preventDefault(); setBusy(true); setAuthError(''); const { error } = await supabase.auth.signInWithPassword({ email, password }); if (error) setAuthError('Email or password is incorrect.'); setBusy(false); }} />;
   return <Dashboard onLogout={() => supabase.auth.signOut()} />;
 }
 
 function AdminLogin({ email, setEmail, password, setPassword, error, busy, onSubmit }: { email: string; setEmail: (value: string) => void; password: string; setPassword: (value: string) => void; error: string; busy: boolean; onSubmit: (event: FormEvent) => void }) {
-  return <div className="login-shell"><div className="login-art"><img src="/png.png" alt="Faafu Atoll School" /><span>FAAFU ATOLL SCHOOL</span><p>Thoughtful celebrations. Stronger community.</p></div><form className="login-card" onSubmit={onSubmit}><span className="section-kicker">Private area</span><h1>Administrator sign in</h1><p>Sign in to view the Teachers Day feedback insights.</p><label>Email address<input type="email" value={email} onChange={(event) => setEmail(event.target.value)} required placeholder="admin@school.edu" /></label><label>Password<input type="password" value={password} onChange={(event) => setPassword(event.target.value)} required minLength={6} placeholder="Enter your password" /></label>{error && <div className="auth-message">{error}</div>}<button className="submit-button full" disabled={busy}>{busy ? 'Please wait...' : 'Sign in to dashboard'} <LockKeyhole size={16} /></button><a className="back-home" href="/">← Back to public form</a></form></div>;
+  return <div className="login-shell"><div className="login-art"><img src={logoPath} alt="Faafu Atoll School" /><span>FAAFU ATOLL SCHOOL</span><p>Thoughtful celebrations. Stronger community.</p></div><form className="login-card" onSubmit={onSubmit}><span className="section-kicker">Private area</span><h1>Administrator sign in</h1><p>Sign in to view the Teachers Day feedback insights.</p><label>Email address<input type="email" value={email} onChange={(event) => setEmail(event.target.value)} required placeholder="admin@school.edu" /></label><label>Password<input type="password" value={password} onChange={(event) => setPassword(event.target.value)} required minLength={6} placeholder="Enter your password" /></label>{error && <div className="auth-message">{error}</div>}<button className="submit-button full" disabled={busy}>{busy ? 'Please wait...' : 'Sign in to dashboard'} <LockKeyhole size={16} /></button><a className="back-home" href={import.meta.env.BASE_URL}>← Back to public form</a></form></div>;
 }
 
 function Dashboard({ onLogout }: { onLogout: () => void }) {
