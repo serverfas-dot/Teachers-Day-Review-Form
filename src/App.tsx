@@ -21,16 +21,27 @@ const submittedKey = 'faafu-teachers-day-review-submitted';
 const basePath = import.meta.env.BASE_URL;
 const logoPath = `${basePath}png.png`;
 
+type AppRoute = 'public' | 'admin';
+
+function getRoute(): AppRoute {
+  if (window.location.pathname.endsWith('/admin') || window.location.hash === '#admin') return 'admin';
+  return 'public';
+}
+
 function App() {
-  const [isAdmin, setIsAdmin] = useState(() => window.location.pathname.endsWith('/admin') || window.location.hash === '#admin');
+  const [route, setRoute] = useState<AppRoute>(getRoute);
 
   useEffect(() => {
-    const syncRoute = () => setIsAdmin(window.location.pathname.endsWith('/admin') || window.location.hash === '#admin');
+    const syncRoute = () => setRoute(getRoute());
     window.addEventListener('hashchange', syncRoute);
-    return () => window.removeEventListener('hashchange', syncRoute);
+    window.addEventListener('popstate', syncRoute);
+    return () => {
+      window.removeEventListener('hashchange', syncRoute);
+      window.removeEventListener('popstate', syncRoute);
+    };
   }, []);
 
-  return isAdmin ? <AdminApp /> : <ReviewForm />;
+  return route === 'admin' ? <AdminApp /> : <ReviewForm />;
 }
 
 function BrandHeader({ admin = false }: { admin?: boolean }) {
@@ -83,18 +94,23 @@ function ReviewForm() {
   </main></div>;
 }
 
+const ADMIN_USERNAME = 'admin';
+const ADMIN_EMAIL = 'faafu.admin@school.edu';
+const ADMIN_PASSWORD = 'FaafuAdmin@2026';
+
 function AdminApp() {
   const [session, setSession] = useState<boolean | null>(null);
-  const [email, setEmail] = useState('admin@faafuschool.edu'); const [password, setPassword] = useState(''); const [authError, setAuthError] = useState(''); const [busy, setBusy] = useState(false);
+  const [username, setUsername] = useState(''); const [password, setPassword] = useState(''); const [authError, setAuthError] = useState(''); const [busy, setBusy] = useState(false);
   useEffect(() => { supabase.auth.getSession().then(({ data }) => setSession(Boolean(data.session))); const { data: listener } = supabase.auth.onAuthStateChange((_event, current) => setSession(Boolean(current))); return () => listener.subscription.unsubscribe(); }, []);
   if (session === null) return <div className="loading-screen"><img src={logoPath} alt="" /><span>Loading dashboard...</span></div>;
-  if (!session) return <AdminLogin email={email} setEmail={setEmail} password={password} setPassword={setPassword} error={authError} busy={busy} onSubmit={async (event) => { event.preventDefault(); setBusy(true); setAuthError(''); const { error } = await supabase.auth.signInWithPassword({ email, password }); if (error) setAuthError('Email or password is incorrect.'); setBusy(false); }} />;
+  if (!session) return <AdminLogin username={username} setUsername={setUsername} password={password} setPassword={setPassword} error={authError} busy={busy} onSubmit={async (event) => { event.preventDefault(); setBusy(true); setAuthError(''); if (username.trim() !== ADMIN_USERNAME || password !== ADMIN_PASSWORD) { setAuthError('Username or password is incorrect.'); setBusy(false); return; } const { error } = await supabase.auth.signInWithPassword({ email: ADMIN_EMAIL, password: ADMIN_PASSWORD }); if (error) setAuthError('Could not sign in. Please try again.'); setBusy(false); }} />;
   return <Dashboard onLogout={() => supabase.auth.signOut()} />;
 }
 
-function AdminLogin({ email, setEmail, password, setPassword, error, busy, onSubmit }: { email: string; setEmail: (value: string) => void; password: string; setPassword: (value: string) => void; error: string; busy: boolean; onSubmit: (event: FormEvent) => void }) {
-  return <div className="login-shell"><div className="login-art"><img src={logoPath} alt="Faafu Atoll School" /><span>FAAFU ATOLL SCHOOL</span><p>Thoughtful celebrations. Stronger community.</p></div><form className="login-card" onSubmit={onSubmit}><span className="section-kicker">Private area</span><h1>Administrator sign in</h1><p>Sign in to view the Teachers Day feedback insights.</p><label>Email address<input type="email" value={email} onChange={(event) => setEmail(event.target.value)} required placeholder="admin@school.edu" /></label><label>Password<input type="password" value={password} onChange={(event) => setPassword(event.target.value)} required minLength={6} placeholder="Enter your password" /></label>{error && <div className="auth-message">{error}</div>}<button className="submit-button full" disabled={busy}>{busy ? 'Please wait...' : 'Sign in to dashboard'} <LockKeyhole size={16} /></button><a className="back-home" href={import.meta.env.BASE_URL}>← Back to public form</a></form></div>;
+function AdminLogin({ username, setUsername, password, setPassword, error, busy, onSubmit }: { username: string; setUsername: (value: string) => void; password: string; setPassword: (value: string) => void; error: string; busy: boolean; onSubmit: (event: FormEvent) => void }) {
+  return <div className="login-shell"><div className="login-art"><img src={logoPath} alt="Faafu Atoll School" /><span>FAAFU ATOLL SCHOOL</span><p>Thoughtful celebrations. Stronger community.</p></div><form className="login-card" onSubmit={onSubmit}><span className="section-kicker">Private area</span><h1>Administrator sign in</h1><p>Sign in to view the Teachers Day feedback insights.</p><label>Username<input type="text" value={username} onChange={(event) => setUsername(event.target.value)} required placeholder="Enter your username" /></label><label>Password<input type="password" value={password} onChange={(event) => setPassword(event.target.value)} required placeholder="Enter your password" /></label>{error && <div className="auth-message">{error}</div>}<button className="submit-button full" disabled={busy}>{busy ? 'Please wait...' : 'Sign in to dashboard'} <LockKeyhole size={16} /></button><a className="back-home" href={basePath}>← Back to public form</a></form></div>;
 }
+
 
 function Dashboard({ onLogout }: { onLogout: () => void }) {
   const [reviews, setReviews] = useState<Review[]>([]); const [loading, setLoading] = useState(true); const [error, setError] = useState('');
