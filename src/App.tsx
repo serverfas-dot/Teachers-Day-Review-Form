@@ -78,7 +78,7 @@ function ReviewForm() {
 
 function AdminApp() {
   const [session, setSession] = useState<boolean | null>(null);
-  const [email, setEmail] = useState('admin.login@faafuschool.edu'); const [password, setPassword] = useState(''); const [authError, setAuthError] = useState(''); const [busy, setBusy] = useState(false);
+  const [email, setEmail] = useState('admin@faafuschool.edu'); const [password, setPassword] = useState(''); const [authError, setAuthError] = useState(''); const [busy, setBusy] = useState(false);
   useEffect(() => { supabase.auth.getSession().then(({ data }) => setSession(Boolean(data.session))); const { data: listener } = supabase.auth.onAuthStateChange((_event, current) => setSession(Boolean(current))); return () => listener.subscription.unsubscribe(); }, []);
   if (session === null) return <div className="loading-screen"><img src={logoPath} alt="" /><span>Loading dashboard...</span></div>;
   if (!session) return <AdminLogin email={email} setEmail={setEmail} password={password} setPassword={setPassword} error={authError} busy={busy} onSubmit={async (event) => { event.preventDefault(); setBusy(true); setAuthError(''); const { error } = await supabase.auth.signInWithPassword({ email, password }); if (error) setAuthError('Email or password is incorrect.'); setBusy(false); }} />;
