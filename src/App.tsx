@@ -18,10 +18,11 @@ const events = [
 const choices: Rating[] = ['Satisfactory', 'Good', 'Excellent'];
 const formTitle = 'Reflect and share your thoughts on Teachers day events - 2026';
 const submittedKey = 'faafu-teachers-day-review-submitted';
-const logoPath = `${import.meta.env.BASE_URL}png.png`;
+const basePath = import.meta.env.BASE_URL;
+const logoPath = `${basePath}png.png`;
 
 function App() {
-  const isAdmin = window.location.pathname.startsWith('/admin');
+  const isAdmin = window.location.pathname.endsWith('/admin') || window.location.hash === '#admin';
   return isAdmin ? <AdminApp /> : <ReviewForm />;
 }
 
@@ -32,7 +33,7 @@ function BrandHeader({ admin = false }: { admin?: boolean }) {
         <img src={logoPath} alt="Faafu Atoll School" />
         <div><strong>Faafu Atoll School</strong><span>{admin ? 'Review insights' : 'Teachers Day 2026'}</span></div>
       </div>
-      {!admin && <a className="admin-link" href={`${import.meta.env.BASE_URL}admin`}><LockKeyhole size={15} /> Admin sign in</a>}
+      {!admin && <a className="admin-link" href={`${basePath}#admin`}><LockKeyhole size={15} /> Admin sign in</a>}
     </header>
   );
 }
