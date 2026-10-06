@@ -22,7 +22,14 @@ const basePath = import.meta.env.BASE_URL;
 const logoPath = `${basePath}png.png`;
 
 function App() {
-  const isAdmin = window.location.pathname.endsWith('/admin') || window.location.hash === '#admin';
+  const [isAdmin, setIsAdmin] = useState(() => window.location.pathname.endsWith('/admin') || window.location.hash === '#admin');
+
+  useEffect(() => {
+    const syncRoute = () => setIsAdmin(window.location.pathname.endsWith('/admin') || window.location.hash === '#admin');
+    window.addEventListener('hashchange', syncRoute);
+    return () => window.removeEventListener('hashchange', syncRoute);
+  }, []);
+
   return isAdmin ? <AdminApp /> : <ReviewForm />;
 }
 
